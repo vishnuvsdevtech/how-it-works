@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How this agent actually works — a walk through the container</title>
+<meta name="description" content="An interactive explainer of the Hermes agent: Docker container, tools, the DeepSeek API call, Telegram transport, memory on disk, and why your laptop does none of the work.">
+<meta name="theme-color" content="#0b0e13">
+<link rel="canonical" href="https://vishnuvsdevtech.github.io/how-it-works/">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="progress" id="progress"></div>
+
+<header class="top">
+  <div class="brand"><span class="dot"></span><span class="mono">HOW THIS ACTUALLY WORKS</span></div>
+  <div class="right"><span class="meta mono">your phone · my container · their GPU</span>
+    <button class="icon" id="theme">◐</button></div>
+</header>
+
+<main>
+
+<!-- ============ 01 the whole path ============ -->
+<section class="sec" id="path">
+  <p class="eyebrow mono">01 — the round trip</p>
+  <h1>One message, six machines</h1>
+  <p class="lede">You type on your phone. Nothing you own is doing the work. Trace a single
+  request from your thumb to the answer and back.</p>
+
+  <div class="journey" id="journey"></div>
+  <div class="journey-note" id="journeyNote">Tap a station to see what happens there.</div>
+
+  <div class="callout">
+    <span class="k mono">worth internalising</span>
+    <p>Your laptop's CPU, RAM and GPU are <b>not on this path at all</b> — except for the final
+    step, drawing text. A workstation and a five-year-old phone perform identically here.</p>
+  </div>
+</section>
+
+<!-- ============ 02 the container ============ -->
+<section class="sec" id="container">
+  <p class="eyebrow mono">02 — inside the box</p>
+  <h2>What's in the container <em>with me</em></h2>
+  <p>This is a Debian 13 image on a Linux host. It has a filesystem, a shell, and a set of tools
+  Hermes installed. The model is not here — only the things the model can reach for.</p>
+
+  <div class="specs">
+    <div><b>8</b><span>CPU cores</span></div>
+    <div><b>3.9 GB</b><span>RAM</span></div>
+    <div><b>none</b><span>GPU</span></div>
+    <div><b>229 GB</b><span>disk (46 GB free)</span></div>
+  </div>
+
+  <div class="fs" id="fs"></div>
+
+  <div class="callout warn">
+    <span class="k mono">the consequence</span>
+    <p>No GPU means no local language model — 3.9 GB of RAM won't hold one. That's the real reason
+    Whisper <span class="mono">large-v3</span> was awkward: it needs ~3 GB just to run, before
+    the rest of the system.</p>
+  </div>
+</section>
+
+<!-- ============ 03 the API call ============ -->
+<section class="sec" id="api">
+  <p class="eyebrow mono">03 — what a turn really is</p>
+  <h2>The model never remembers. <em>The whole story is re-sent.</em></h2>
+  <p>This is the part most people get wrong. There is no session on DeepSeek's side. Every single
+  turn Hermes assembles a fresh prompt — system rules, my memory, every earlier message, every
+  tool result — and posts it. The model answers once and forgets.</p>
+
+  <div class="payload" id="payload"></div>
+
+  <div class="grow" id="grow"></div>
+  <p class="hint">Drag the slider: this is why cost climbs as a conversation gets longer, and why
+  compaction exists.</p>
+</section>
+
+<!-- ============ 04 memory ============ -->
+<section class="sec" id="memory">
+  <p class="eyebrow mono">04 — what survives</p>
+  <h2>Four kinds of memory, <em>three of them on disk</em></h2>
+  <div class="mem" id="mem"></div>
+  <div class="callout warn">
+    <span class="k mono">the fragility nobody mentions</span>
+    <p>All of it lives on this container's disk. If the container is destroyed, the memory,
+    the sessions and the cron jobs go with it. There is no backup I maintain — a fact worth
+    knowing before you rely on it.</p>
+  </div>
+</section>
+
+<!-- ============ 05 tools ============ -->
+<section class="sec" id="tools">
+  <p class="eyebrow mono">05 — why it can <em>do</em> things</p>
+  <h2>The model writes intentions. <em>Hermes executes them.</em></h2>
+  <p>A language model can only emit text. Tool use works because Hermes recognises a structured
+  request in that text, runs it in the container, and feeds the result back as the next message.
+  The loop below is one real turn from this conversation.</p>
+  <div class="loop" id="loop"></div>
+</section>
+
+<!-- ============ 06 your machine ============ -->
+<section class="sec" id="you">
+  <p class="eyebrow mono">06 — your side</p>
+  <h2>What your Mac is actually for</h2>
+  <div class="compare" id="compare"></div>
+</section>
+
+<!-- ============ 07 limits ============ -->
+<section class="sec" id="limits">
+  <p class="eyebrow mono">07 — honest limits</p>
+  <h2>Where this design breaks</h2>
+  <div class="limits" id="limitsGrid"></div>
+</section>
+
+</main>
+
+<footer class="foot mono">
+  <span>How this actually works</span>
+  <span>container · api · memory · tools</span>
+</footer>
+
+<script src="assets/app.js"></script>
+</body>
+</html>
